@@ -1,0 +1,6 @@
+[allowlist]
+description = "Marketing Engine allowlist"
+regexTarget = "match"
+regexes = [
+    '''marketing-engine-v1''',
+]

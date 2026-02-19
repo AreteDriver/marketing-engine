@@ -1,0 +1,21 @@
+timezone: "America/New_York"
+
+posting_windows:
+  twitter:
+    - { days: [1, 2, 3, 4, 5], start: "08:00", end: "10:00" }
+    - { days: [1, 2, 3, 4, 5], start: "17:00", end: "19:00" }
+  linkedin:
+    - { days: [1, 2, 3], start: "08:00", end: "10:00" }
+  reddit:
+    - { days: [0, 1, 2, 3, 4, 5, 6], start: "07:00", end: "11:00" }
+
+distribution:
+  max_same_stream_per_day: 2
+  min_hours_between_same_platform: 2
+  generation_day: 0
+  posting_days: [1, 2, 3, 4, 5, 6]
+
+volume_targets:
+  twitter: { min: 7, max: 10 }
+  linkedin: { min: 3, max: 5 }
+  reddit: { min: 3, max: 5 }

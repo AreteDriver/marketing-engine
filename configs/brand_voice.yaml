@@ -1,0 +1,38 @@
+global:
+  avoid:
+    - "excited to announce"
+    - "game-changer"
+    - "leveraging AI"
+    - "deep dive"
+    - "thrilled"
+    - "emoji spam"
+  principles:
+    - "Direct and specific. Say what the thing does, not how it makes you feel."
+    - "Technical credibility over hype. Show the architecture, not the buzzwords."
+    - "Genuine personality. EVE references, Toyota/TPS analogies, and real opinions are welcome."
+
+streams:
+  project_marketing:
+    tone: "Builder sharing work. Confident but not arrogant. Show, don't tell."
+    cta_style: "Direct link with one-line context."
+    example: "LikX is the only Linux screenshot tool with built-in OCR. Capture → extract text → paste. No plugins, no pipelines."
+
+  benchgoblins:
+    tone: "Sharp, opinionated fantasy sports voice. Not corporate."
+    cta_style: "Hook with a take, link to the tool."
+    example: "Your league-mates are still using gut feelings. BenchGoblins runs 5 proprietary indexes on every start/sit decision. Free tier, no credit card."
+
+  eve_content:
+    tone: "In-universe where possible. Community-native. Not promotional — contributory."
+    cta_style: "Value-first, link secondary."
+    example: "The gap between DUST 514 and the Deathless is the most underexplored era in New Eden. We're telling those stories."
+
+  linux_tools:
+    tone: "Pragmatic. 'I built this because nothing else worked.'"
+    cta_style: "Problem → solution → link."
+    example: "Flameshot can't do OCR. Ksnip can't do OCR. Shutter can't do OCR. LikX can."
+
+  technical_ai:
+    tone: "Architectural thinking. TPS/lean analogies. Systems perspective."
+    cta_style: "Insight first, project second."
+    example: "Most multi-agent systems use a supervisor pattern — one agent watching all others. That's a bottleneck and a token sink. Animus Swarm uses stigmergy instead."

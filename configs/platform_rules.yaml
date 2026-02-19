@@ -1,0 +1,48 @@
+twitter:
+  max_chars: 280
+  max_hashtags: 2
+  best_practices:
+    - "Lead with a hook"
+    - "Thread format for deep content"
+    - "Images boost engagement 2-3x"
+
+linkedin:
+  max_chars: 3000
+  max_hashtags: 5
+  best_practices:
+    - "Professional tone"
+    - "First line is the hook (before 'see more' fold)"
+    - "Tag relevant people/companies when genuine"
+
+reddit:
+  max_chars: 40000
+  max_hashtags: 0
+  best_practices:
+    - "Match subreddit culture exactly"
+    - "Self-promotion rules vary by subreddit"
+    - "Never cross-post same content simultaneously"
+    - "Include genuine value, not just a link"
+  target_subreddits:
+    benchgoblins: ["fantasyfootball", "DynastyFF"]
+    technical_ai: ["LocalLLaMA", "MachineLearning"]
+    linux_tools: ["linux", "linux_gaming", "SteamDeck"]
+    eve_content: ["Eve", "eveonline"]
+    project_marketing: ["Python", "rust", "selfhosted"]
+
+youtube:
+  max_title_chars: 100
+  max_description_chars: 5000
+  max_tags_chars: 500
+  best_practices:
+    - "Front-load keywords in title"
+    - "First 2 lines of description visible before fold"
+    - "Use chapters (timestamps)"
+
+tiktok:
+  max_caption_chars: 2200
+  max_hashtags: 5
+  best_practices:
+    - "Hook in first 1-2 seconds"
+    - "Trending sounds boost reach"
+    - "Text overlays for silent viewers"
+    - "Native vertical only"
