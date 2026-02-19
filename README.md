@@ -2,30 +2,77 @@
 
 **Autonomous cross-platform content creation, batch approval, and scheduled posting.**
 
-A Forge workflow that generates platform-optimized marketing posts for two content streams, queues them for weekly batch approval, and publishes approved posts on schedule.
+A monorepo containing the Marketing Engine orchestration layer and three AI-powered YouTube channel pipelines. Forge workflows generate content, queue for weekly batch approval, and publish on schedule.
+
+---
+
+## Repository Structure
+
+```
+marketing-engine/
+├── docs/
+│   └── DESIGN.md                        ← Marketing Engine design spec
+├── channels/
+│   ├── story-fire/                      ← World folklore Shorts (Storyteller + Dog)
+│   │   ├── README.md
+│   │   └── docs/DESIGN.md
+│   ├── new-eden-whispers/               ← EVE Online Chronicles Shorts
+│   │   ├── README.md
+│   │   └── docs/DESIGN.md
+│   └── holmes-wisdom/                   ← Ernest Holmes public domain Shorts
+│       ├── README.md
+│       └── docs/DESIGN.md
+├── README.md
+└── LICENSE
+```
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  WEEKLY CYCLE                     │
-│                                                   │
-│  Research Agent → Draft Agent → Format Agent      │
-│       ↓              ↓              ↓             │
-│  Trending topics  Raw posts    Platform-specific  │
-│  Project updates  per stream   versions           │
-│                                                   │
-│              Queue Agent → APPROVAL QUEUE          │
-│                    ↓         (weekly batch)        │
-│              Scheduler Agent                       │
-│                    ↓                               │
-│     ┌──────┬──────────┬────────┬────────┬───────┐ │
-│     │  X   │ LinkedIn │ Reddit │ YouTube│ TikTok│ │
-│     └──────┴──────────┴────────┴────────┴───────┘ │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   MARKETING ENGINE                        │
+│                                                           │
+│  Research Agent → Draft Agent → Format Agent → Queue      │
+│       ↓              ↓              ↓            ↓        │
+│  Trends/activity  Raw posts    Platform-fit   Schedule    │
+│                                                           │
+│              APPROVAL QUEUE (weekly batch review)          │
+│                         ↓                                 │
+│              Scheduler Agent → Publish                    │
+│                         ↓                                 │
+│     ┌──────┬──────────┬────────┬─────────┬──────────┐    │
+│     │  X   │ LinkedIn │ Reddit │ YouTube │  TikTok  │    │
+│     └──────┴──────────┴────────┴─────────┴──────────┘    │
+│                                                           │
+│  CONTENT SOURCES:                                         │
+│  ┌──────────────┐ ┌────────────────┐ ┌──────────────┐   │
+│  │  Story Fire   │ │  New Eden      │ │   Holmes     │   │
+│  │  (folklore)   │ │  Whispers      │ │   Wisdom     │   │
+│  │              │ │  (EVE lore)    │ │  (SoM)       │   │
+│  └──────────────┘ └────────────────┘ └──────────────┘   │
+│  + Project marketing (GitHub repos, launches, updates)   │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Channels
+
+### [Story Fire](channels/story-fire/) — World Folklore
+
+AI-powered YouTube Shorts in the spirit of Jim Henson's *The Storyteller*. Two-character narration (Storyteller + Dog), culture-specific Stable Diffusion visuals, Gorgon multi-agent orchestration. 3,000+ public domain folk tales from every culture.
+
+### [New Eden Whispers](channels/new-eden-whispers/) — EVE Online Lore
+
+Cinematic YouTube Shorts from CCP's EVE Online Chronicles. 200+ chronicles, faction-matched visuals with mood color grading, epic narration. CCP content policy compliant — ad monetization allowed.
+
+### [Holmes Wisdom](channels/holmes-wisdom/) — Science of Mind
+
+Ernest Holmes' pre-1929 public domain writings transformed into YouTube Shorts. Fully local pipeline (Ollama + Piper TTS + FFmpeg). Mood-matched gradient visuals. Top-of-funnel for courses and memberships.
+
+---
 
 ## Content Streams
 
@@ -41,13 +88,7 @@ Drives traffic to GitHub repos, launches, and updates.
 | claudemd-forge | Usage tips, developer productivity angle |
 
 ### Stream 2: Media Engine
-Drives traffic to YouTube channels.
-
-| Channel | Content Angles |
-|---------|---------------|
-| Story Fire | Episode teasers, folklore facts, mythology threads |
-| New Eden Whispers | EVE lore snippets, in-universe teasers |
-| Holmes Wisdom | Deduction puzzles, wisdom quotes, episode highlights |
+Drives traffic to YouTube channels (see Channels above).
 
 ---
 
@@ -68,7 +109,7 @@ Drives traffic to YouTube channels.
 | Day | Activity |
 |-----|----------|
 | Monday | Forge runs Research → Draft → Format → Queue pipeline |
-| Monday evening | You review the weekly queue: approve / edit / reject per post |
+| Monday evening | Review the weekly queue: approve / edit / reject per post |
 | Tuesday-Sunday | Scheduler publishes approved content at assigned times |
 | Sunday | Analytics collection for next week's optimization |
 
@@ -86,19 +127,6 @@ Drives traffic to YouTube channels.
 
 ---
 
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Language | Python |
-| Orchestration | Animus Forge (Gorgon) |
-| LLM | Claude API / Ollama |
-| Scheduling | Cron or persistent daemon |
-| State | SQLite (Forge checkpoints) |
-| Config | Declarative YAML |
-
----
-
 ## Estimated Volume
 
 | Platform | Posts/Week |
@@ -113,9 +141,26 @@ Drives traffic to YouTube channels.
 
 ---
 
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Language | Python |
+| Orchestration | Animus Forge (Gorgon) |
+| LLM | Claude API / Ollama |
+| Scheduling | Cron or persistent daemon |
+| State | SQLite (Forge checkpoints) |
+| Config | Declarative YAML |
+
+---
+
 ## Status
 
-Pre-implementation. Design spec complete. See [docs/DESIGN.md](docs/DESIGN.md) for full architecture.
+Pre-implementation. Design specs complete for all components:
+- [Marketing Engine design](docs/DESIGN.md)
+- [Story Fire design](channels/story-fire/docs/DESIGN.md)
+- [New Eden Whispers design](channels/new-eden-whispers/docs/DESIGN.md)
+- [Holmes Wisdom design](channels/holmes-wisdom/docs/DESIGN.md)
 
 ---
 
