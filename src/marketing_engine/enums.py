@@ -30,3 +30,12 @@ class ApprovalStatus(StrEnum):
     approved = "approved"
     edited = "edited"
     rejected = "rejected"
+
+
+class PublishStatus(StrEnum):
+    """Post publishing statuses."""
+
+    pending = "pending"
+    published = "published"
+    failed = "failed"
+    skipped = "skipped"

@@ -23,3 +23,7 @@ class PipelineError(MarketingEngineError):
 
 class LicenseError(MarketingEngineError):
     """License validation or feature access error."""
+
+
+class PublishError(MarketingEngineError):
+    """Platform publishing error."""

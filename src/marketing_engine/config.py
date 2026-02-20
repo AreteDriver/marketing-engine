@@ -52,6 +52,41 @@ def _load_yaml(path: Path) -> dict:
     return data
 
 
+_PLATFORM_CREDENTIALS: dict[str, dict[str, str]] = {
+    "twitter": {
+        "bearer_token": "MKEN_TWITTER_BEARER_TOKEN",
+    },
+    "linkedin": {
+        "access_token": "MKEN_LINKEDIN_ACCESS_TOKEN",
+        "person_id": "MKEN_LINKEDIN_PERSON_ID",
+    },
+    "reddit": {
+        "client_id": "MKEN_REDDIT_CLIENT_ID",
+        "client_secret": "MKEN_REDDIT_CLIENT_SECRET",
+        "username": "MKEN_REDDIT_USERNAME",
+        "password": "MKEN_REDDIT_PASSWORD",
+    },
+}
+
+
+def get_platform_credentials(platform: str) -> dict[str, str]:
+    """Load platform API credentials from environment variables.
+
+    Args:
+        platform: Platform name (twitter, linkedin, reddit).
+
+    Returns:
+        Dict mapping credential key to value.
+
+    Raises:
+        ConfigError: If the platform is not recognized.
+    """
+    env_map = _PLATFORM_CREDENTIALS.get(platform)
+    if env_map is None:
+        raise ConfigError(f"Unknown platform for credentials: {platform}")
+    return {key: os.environ.get(env_var, "") for key, env_var in env_map.items()}
+
+
 def load_brand_voice(path: Path | None = None) -> dict:
     """Load brand voice configuration.
 

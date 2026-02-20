@@ -33,6 +33,7 @@ PRO_FEATURES = frozenset(
         "analytics",
         "multi_week",
         "custom_streams",
+        "publish",
     }
 )
 

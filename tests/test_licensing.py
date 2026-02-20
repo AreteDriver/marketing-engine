@@ -217,7 +217,14 @@ class TestFeatureSets:
         assert expected == FREE_FEATURES
 
     def test_pro_features_contents(self):
-        expected = {"anthropic_llm", "openai_llm", "analytics", "multi_week", "custom_streams"}
+        expected = {
+            "anthropic_llm",
+            "openai_llm",
+            "analytics",
+            "multi_week",
+            "custom_streams",
+            "publish",
+        }
         assert expected == PRO_FEATURES
 
     def test_no_overlap_between_tiers(self):

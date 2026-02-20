@@ -9,9 +9,10 @@ import threading
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from marketing_engine.enums import ApprovalStatus, ContentStream, Platform
+from marketing_engine.enums import ApprovalStatus, ContentStream, Platform, PublishStatus
 from marketing_engine.exceptions import DatabaseError
 from marketing_engine.models import ContentBrief, PipelineRun, PostDraft
+from marketing_engine.publishers.result import PublishResult
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS pipeline_runs (
@@ -59,7 +60,26 @@ CREATE INDEX IF NOT EXISTS idx_drafts_platform ON post_drafts(platform);
 CREATE INDEX IF NOT EXISTS idx_drafts_scheduled ON post_drafts(scheduled_time);
 CREATE INDEX IF NOT EXISTS idx_briefs_pipeline ON content_briefs(pipeline_run_id);
 CREATE INDEX IF NOT EXISTS idx_drafts_pipeline ON post_drafts(pipeline_run_id);
+CREATE TABLE IF NOT EXISTS publish_log (
+    id TEXT PRIMARY KEY,
+    post_id TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    status TEXT NOT NULL,
+    platform_post_id TEXT,
+    post_url TEXT,
+    error TEXT,
+    published_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_publish_log_post ON publish_log(post_id);
 """
+
+_MIGRATION_COLUMNS = [
+    ("post_drafts", "publish_status", "TEXT NOT NULL DEFAULT 'pending'"),
+    ("post_drafts", "published_at", "TEXT"),
+    ("post_drafts", "post_url", "TEXT"),
+    ("post_drafts", "platform_post_id", "TEXT"),
+    ("post_drafts", "publish_error", "TEXT"),
+]
 
 
 class Database:
@@ -90,6 +110,17 @@ class Database:
             conn.executescript(_SCHEMA)
         except sqlite3.Error as exc:
             raise DatabaseError(f"Failed to initialize schema: {exc}") from exc
+        self._migrate_columns(conn)
+
+    def _migrate_columns(self, conn: sqlite3.Connection) -> None:
+        """Add columns that may be missing from older schemas."""
+        for table, column, col_def in _MIGRATION_COLUMNS:
+            try:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}")
+                conn.commit()
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
 
     def save_brief(self, brief: ContentBrief, pipeline_run_id: str) -> str:
         """Insert a content brief and return its ID."""
@@ -126,8 +157,9 @@ class Database:
                    (id, brief_id, pipeline_run_id, stream, platform, content,
                     media_urls, cta_url, hashtags, subreddit, scheduled_time,
                     approval_status, edited_content, rejection_reason,
-                    created_at, updated_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    publish_status, published_at, post_url, platform_post_id,
+                    publish_error, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     draft.id,
                     draft.brief_id,
@@ -143,6 +175,11 @@ class Database:
                     draft.approval_status.value,
                     draft.edited_content,
                     draft.rejection_reason,
+                    draft.publish_status.value,
+                    draft.published_at.isoformat() if draft.published_at else None,
+                    draft.post_url,
+                    draft.platform_post_id,
+                    draft.publish_error,
                     draft.created_at.isoformat(),
                     draft.updated_at.isoformat(),
                 ),
@@ -227,6 +264,13 @@ class Database:
             approval_status=ApprovalStatus(row["approval_status"]),
             edited_content=row["edited_content"],
             rejection_reason=row["rejection_reason"],
+            publish_status=PublishStatus(row["publish_status"]),
+            published_at=(
+                datetime.fromisoformat(row["published_at"]) if row["published_at"] else None
+            ),
+            post_url=row["post_url"],
+            platform_post_id=row["platform_post_id"],
+            publish_error=row["publish_error"],
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
         )
@@ -334,6 +378,93 @@ class Database:
         except sqlite3.Error as exc:
             raise DatabaseError(f"Failed to get pipeline runs: {exc}") from exc
         return [self._row_to_run(r) for r in rows]
+
+    def get_publishable(self, now: datetime) -> list[PostDraft]:
+        """Return approved posts that are due for publishing."""
+        conn = self._get_conn()
+        now_str = now.isoformat()
+        try:
+            rows = conn.execute(
+                """SELECT * FROM post_drafts
+                   WHERE approval_status IN ('approved', 'edited')
+                     AND publish_status = 'pending'
+                     AND scheduled_time <= ?
+                   ORDER BY scheduled_time""",
+                (now_str,),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise DatabaseError(f"Failed to get publishable posts: {exc}") from exc
+        return [self._row_to_post(r) for r in rows]
+
+    def update_publish_status(
+        self,
+        post_id: str,
+        status: PublishStatus,
+        published_at: datetime | None = None,
+        post_url: str | None = None,
+        platform_post_id: str | None = None,
+        publish_error: str | None = None,
+    ) -> None:
+        """Update the publish status and related fields of a post."""
+        conn = self._get_conn()
+        now = datetime.now(UTC).isoformat()
+        try:
+            conn.execute(
+                """UPDATE post_drafts
+                   SET publish_status = ?, published_at = ?, post_url = ?,
+                       platform_post_id = ?, publish_error = ?, updated_at = ?
+                   WHERE id = ?""",
+                (
+                    status.value,
+                    published_at.isoformat() if published_at else None,
+                    post_url,
+                    platform_post_id,
+                    publish_error,
+                    now,
+                    post_id,
+                ),
+            )
+            conn.commit()
+        except sqlite3.Error as exc:
+            raise DatabaseError(f"Failed to update publish status for {post_id}: {exc}") from exc
+
+    def save_publish_log(self, result: PublishResult) -> None:
+        """Insert a publish log entry."""
+        from uuid import uuid4
+
+        conn = self._get_conn()
+        try:
+            conn.execute(
+                """INSERT INTO publish_log
+                   (id, post_id, platform, status, platform_post_id,
+                    post_url, error, published_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    str(uuid4()),
+                    result.post_id,
+                    result.platform.value,
+                    "published" if result.success else "failed",
+                    result.platform_post_id,
+                    result.post_url,
+                    result.error,
+                    result.published_at.isoformat() if result.published_at else None,
+                ),
+            )
+            conn.commit()
+        except sqlite3.Error as exc:
+            raise DatabaseError(f"Failed to save publish log: {exc}") from exc
+
+    def get_publish_history(self, limit: int = 20) -> list[dict]:
+        """Return recent publish log entries."""
+        conn = self._get_conn()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM publish_log ORDER BY published_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise DatabaseError(f"Failed to get publish history: {exc}") from exc
+        return [dict(r) for r in rows]
 
     def close(self) -> None:
         """Close the thread-local database connection."""

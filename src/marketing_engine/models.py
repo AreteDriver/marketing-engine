@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from marketing_engine.enums import ApprovalStatus, ContentStream, Platform
+from marketing_engine.enums import ApprovalStatus, ContentStream, Platform, PublishStatus
 
 
 def _utcnow() -> datetime:
@@ -44,6 +44,11 @@ class PostDraft(BaseModel):
     approval_status: ApprovalStatus = ApprovalStatus.pending
     edited_content: str | None = None
     rejection_reason: str | None = None
+    publish_status: PublishStatus = PublishStatus.pending
+    published_at: datetime | None = None
+    post_url: str | None = None
+    platform_post_id: str | None = None
+    publish_error: str | None = None
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 

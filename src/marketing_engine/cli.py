@@ -520,6 +520,156 @@ def init() -> None:
     console.print("[bold]Initialization complete.[/bold]")
 
 
+@app.command()
+def publish(
+    week: str = typer.Option(
+        "",
+        "--week",
+        help="Target week (YYYY-MM-DD Monday). Default: next Monday.",
+    ),
+    platform: str = typer.Option(
+        "",
+        "--platform",
+        help="Filter by platform (twitter, linkedin, reddit).",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Simulate publishing without making API calls.",
+    ),
+    all_approved: bool = typer.Option(
+        False,
+        "--all",
+        help="Publish all approved posts, not just due ones.",
+    ),
+) -> None:
+    """Publish approved posts to platforms."""
+    from marketing_engine.db import get_database
+    from marketing_engine.licensing import require_feature
+    from marketing_engine.publishers.scheduler import publish_due_posts
+
+    try:
+        if not dry_run:
+            require_feature("publish")
+
+        db = get_database()
+
+        if all_approved:
+            week_of = _parse_date(week) if week else _next_monday()
+            posts = db.get_queue(week_of)
+            posts = [
+                p
+                for p in posts
+                if p.approval_status in (ApprovalStatus.approved, ApprovalStatus.edited)
+            ]
+        else:
+            posts = None  # scheduler handles query
+
+        if platform:
+            from marketing_engine.enums import Platform
+
+            try:
+                Platform(platform)
+            except ValueError:
+                console.print(f"[red]Invalid platform: {platform}[/red]")
+                raise typer.Exit(code=1) from None
+
+        results = publish_due_posts(db, dry_run=dry_run)
+
+        if not results:
+            console.print("[yellow]No posts due for publishing.[/yellow]")
+            return
+
+        for r in results:
+            if r.success:
+                console.print(f"[green]Published[/green] {r.platform} → {r.post_url or 'OK'}")
+            else:
+                console.print(f"[red]Failed[/red] {r.platform}: {r.error}")
+
+        ok = sum(1 for r in results if r.success)
+        fail = len(results) - ok
+        console.print(f"\n[bold]{ok} published, {fail} failed[/bold]")
+
+    except MarketingEngineError as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+
+@app.command(name="publish-one")
+def publish_one(
+    post_id: str = typer.Argument(..., help="Post ID to publish."),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Simulate publishing without making API calls.",
+    ),
+) -> None:
+    """Publish a single post by ID."""
+    from marketing_engine.db import get_database
+    from marketing_engine.licensing import require_feature
+    from marketing_engine.publishers.scheduler import publish_single
+
+    try:
+        if not dry_run:
+            require_feature("publish")
+
+        db = get_database()
+        result = publish_single(db, post_id, dry_run=dry_run)
+
+        if result.success:
+            console.print(f"[green]Published[/green] {result.platform} → {result.post_url or 'OK'}")
+        else:
+            console.print(f"[red]Failed[/red] {result.platform}: {result.error}")
+
+    except MarketingEngineError as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+
+@app.command(name="publish-status")
+def publish_status_cmd(
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of entries to show."),
+) -> None:
+    """Show recent publish history."""
+    from rich.table import Table
+    from rich.text import Text
+
+    from marketing_engine.db import get_database
+
+    try:
+        db = get_database()
+        history = db.get_publish_history(limit=limit)
+
+        if not history:
+            console.print("[yellow]No publish history found.[/yellow]")
+            return
+
+        table = Table(title="Publish History", show_lines=True)
+        table.add_column("Post ID", min_width=10)
+        table.add_column("Platform", min_width=8)
+        table.add_column("Status", min_width=10)
+        table.add_column("URL")
+        table.add_column("Published At", min_width=19)
+        table.add_column("Error")
+
+        for entry in history:
+            status_color = "green" if entry["status"] == "published" else "red"
+            table.add_row(
+                (entry["post_id"][:8] + "...") if entry["post_id"] else "",
+                entry.get("platform", ""),
+                Text(entry.get("status", ""), style=status_color),
+                entry.get("post_url", "") or "",
+                entry.get("published_at", "") or "",
+                entry.get("error", "") or "",
+            )
+
+        console.print(table)
+
+    except MarketingEngineError as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+
 _DEFAULT_BRAND_VOICE = """\
 # Brand Voice Configuration
 avoid:
