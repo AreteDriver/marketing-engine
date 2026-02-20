@@ -1,0 +1,46 @@
+# Root Note — Forgotten Instruments Configuration
+
+# Ollama settings
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "llama3.1:8b"
+  temperature: 0.7
+
+# TTS settings
+tts:
+  engine: "piper"
+  piper:
+    model: "models/piper/voice-en-us-lessac-medium.onnx"
+
+# Visual settings (9:16 for Shorts)
+visuals:
+  width: 1080
+  height: 1920
+  fps: 30
+
+# Caption settings
+captions:
+  whisper_model: "base"
+  words_per_group: 4
+
+# Output settings
+output:
+  format: "mp4"
+  video_codec: "libx264"
+  audio_codec: "aac"
+  crf: 23
+
+# Content settings
+content:
+  min_words: 100
+  max_words: 140
+  target_duration_seconds: 50
+
+# Instrument regions for content calendar
+regions:
+  european: ["hurdy-gurdy", "nyckelharpa", "glass armonica", "crumhorn", "shawm"]
+  african: ["kora", "mbira", "talking drum", "balafon", "nyatiti"]
+  asian: ["erhu", "shamisen", "gamelan", "pipa", "guzheng", "sitar"]
+  middle_eastern: ["oud", "ney", "qanun", "santoor", "rebab"]
+  americas: ["charango", "berimbau", "steel pan", "quena", "marimba"]
+  experimental: ["theremin", "hang drum", "waterphone", "ondes martenot", "daxophone"]

@@ -1,0 +1,37 @@
+# Hearthstone — Ambient Soundscapes Configuration
+
+# Ollama settings (for soundscape design)
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "llama3.1:8b"
+  temperature: 0.7
+
+# Audio settings
+audio:
+  target_duration_hours: 10
+  format: "aac"
+  bitrate: "192k"
+  sample_rate: 44100
+
+# Visual settings (16:9 for long-form)
+visuals:
+  width: 1920
+  height: 1080
+  fps: 30
+  style: "slow_motion_loop"  # subtle Ken Burns on still images
+
+# Output settings
+output:
+  format: "mp4"
+  video_codec: "libx264"
+  preset: "ultrafast"  # Speed matters for 10hr videos
+  crf: 28  # Slightly lower quality OK for ambient
+
+# Theme categories
+categories:
+  urban: ["cafe", "bookshop", "train station", "library", "city rain"]
+  nature: ["forest", "ocean", "river", "mountain", "meadow"]
+  fantasy: ["space station", "medieval tavern", "enchanted library", "wizard tower"]
+  cultural: ["japanese garden", "moroccan courtyard", "irish pub", "parisian cafe"]
+  weather: ["thunderstorm", "snowfall", "gentle rain", "wind", "fog"]
+  cozy: ["fireplace", "cabin", "blanket fort", "window seat"]
