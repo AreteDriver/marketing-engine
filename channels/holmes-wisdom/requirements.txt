@@ -1,0 +1,11 @@
+# Holmes Wisdom — Pipeline Dependencies
+requests>=2.31.0
+Pillow>=10.0.0
+pyyaml>=6.0.1
+
+# TTS (choose one)
+# piper-tts>=1.2.0          # Local, free
+# elevenlabs>=1.0.0          # Cloud, paid
+
+# Captions
+# openai-whisper>=20230918   # Local, free (requires torch)

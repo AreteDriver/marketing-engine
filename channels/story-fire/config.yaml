@@ -1,0 +1,63 @@
+# Story Fire — AI Folklore Shorts Pipeline Configuration
+
+# Ollama settings
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "llama3.1:8b"
+  temperature: 0.8  # Slightly higher for creative storytelling
+  top_p: 0.9
+
+# TTS settings (two-voice system)
+tts:
+  engine: "piper"  # "piper" or "elevenlabs"
+  piper:
+    storyteller_model: "models/piper/voice-en-us-lessac-medium.onnx"
+    dog_model: "models/piper/voice-en-us-lessac-medium.onnx"
+  elevenlabs:
+    api_key: ""
+    storyteller_voice_id: "adam"      # Deep, warm, narrative
+    dog_voice_id: "charlie"           # Distinct, slightly nasal
+
+# Visual settings
+visuals:
+  default_culture: "european"
+  width: 1080
+  height: 1920
+  fps: 30
+
+# Caption settings
+captions:
+  whisper_model: "base"
+  words_per_group: 4
+  style: "warm_serif"  # Storytelling aesthetic
+
+# Output settings
+output:
+  format: "mp4"
+  video_codec: "libx264"
+  audio_codec: "aac"
+  crf: 23
+
+# Ambient sound
+ambient:
+  fire_crackle: "assets/audio/fire_crackle_loop.wav"
+  wind_gentle: "assets/audio/wind_gentle_loop.wav"
+  rain_soft: "assets/audio/rain_soft_loop.wav"
+  night_forest: "assets/audio/night_forest_loop.wav"
+  volume: 0.08
+
+# Content settings
+content:
+  min_words: 100
+  max_words: 140
+  target_duration_seconds: 48
+
+# Culture rotation (weekly schedule)
+schedule:
+  monday: "european"
+  tuesday: "japanese"
+  wednesday: "african"
+  thursday: "norse"
+  friday: "arabian"
+  saturday: "greek"
+  sunday: "community_vote"
