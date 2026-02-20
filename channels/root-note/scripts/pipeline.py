@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -136,7 +137,8 @@ def run_pipeline(
         print("\n[3/5] Generating visuals...")
         duration = script.get("estimated_duration_seconds", 50) + 3
         try:
-            bg_img = tempfile.mktemp(suffix=".png")
+            fd, bg_img = tempfile.mkstemp(suffix=".png")
+            os.close(fd)
             subprocess.run(
                 [
                     "magick",
